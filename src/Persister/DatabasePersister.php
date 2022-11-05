@@ -33,7 +33,7 @@ class DatabasePersister implements PersisterInterface
                 if (count($primaryKey) == 1) {
                     $primaryKey = array_pop($primaryKey);
                 } else {
-                    $primaryKey = json_encode($primaryKey);
+                    $primaryKey = json_encode($primaryKey, JSON_THROW_ON_ERROR);
                 }
             }
             $date = new DateTime($log->getTimestamp());
@@ -45,9 +45,9 @@ class DatabasePersister implements PersisterInterface
                 'source_key' => $primaryKey,
                 'source' => $log->getSourceName(),
                 'parent_source' => $log->getParentSourceName(),
-                'original' => $eventType === 'delete' ? null : json_encode($log->getOriginal()),
-                'changed' => $eventType === 'delete' ? null : json_encode($log->getChanged()),
-                'meta' => json_encode($meta)
+                'original' => $eventType === 'delete' ? null : json_encode($log->getOriginal(), JSON_THROW_ON_ERROR),
+                'changed' => $eventType === 'delete' ? null : json_encode($log->getChanged(), JSON_THROW_ON_ERROR),
+                'meta' => json_encode($meta, JSON_THROW_ON_ERROR)
             ];
             $Audit = $this->loadModel('Audits');
             if (!empty($meta['user'])) {

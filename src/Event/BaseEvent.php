@@ -15,20 +15,6 @@ abstract class BaseEvent implements EventInterface
     use SerializableEventTrait;
 
     /**
-     * The array of changed properties for the entity.
-     *
-     * @var array
-     */
-    protected $changed;
-
-    /**
-     * The array of original properties before they got changed.
-     *
-     * @var array
-     */
-    protected $original;
-
-    /**
      * Construnctor.
      *
      * @param string $transationId The global transaction id
@@ -37,13 +23,11 @@ abstract class BaseEvent implements EventInterface
      * @param array $changed The array of changes that got detected for the entity
      * @param array $original The original values the entity had before it got changed
      */
-    public function __construct($transactionId, $id, $source, $changed, $original)
+    public function __construct($transactionId, mixed $id, $source, protected $changed, protected $original)
     {
         $this->transactionId = $transactionId;
         $this->id = $id;
         $this->source = $source;
-        $this->changed = $changed;
-        $this->original = $original;
         $this->timestamp = (new DateTime())->format(DateTime::ATOM);
     }
 

@@ -31,9 +31,7 @@ class PersistTask extends Shell
     {
         $factory = new EventFactory();
         $events = array_map(
-            function ($event) use ($factory) {
-                return is_array($event) ? $factory->create($event) : $event;
-            },
+            fn($event) => is_array($event) ? $factory->create($event) : $event,
             $events
         );
         $this->persister()->logEvents($events);

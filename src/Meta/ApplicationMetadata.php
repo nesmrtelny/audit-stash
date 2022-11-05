@@ -32,7 +32,6 @@ class ApplicationMetadata implements EventListenerInterface
     /**
      * Returns an array with the events this class listens to.
      *
-     * @return array
      */
     public function implementedEvents(): array
     {

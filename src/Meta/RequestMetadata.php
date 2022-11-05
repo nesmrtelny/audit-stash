@@ -13,35 +13,18 @@ use Cake\Http\ServerRequest as Request;
 class RequestMetadata implements EventListenerInterface
 {
     /**
-     * The current request.
-     *
-     * @var Request
-     */
-    protected $request;
-
-    /**
-     * The current user name or id.
-     *
-     * @var mixed
-     */
-    protected $user;
-
-    /**
      * Constructor.
      *
      * @param Request $request The current request
      * @param string|int $user The current user id or username
      */
-    public function __construct($request, $user = null)
+    public function __construct(protected $request, protected $user = null)
     {
-        $this->request = $request;
-        $this->user = $user;
     }
 
     /**
      * Returns an array with the events this class listens to.
      *
-     * @return array
      */
     public function implementedEvents(): array
     {

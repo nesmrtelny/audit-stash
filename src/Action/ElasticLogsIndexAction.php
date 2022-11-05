@@ -45,22 +45,20 @@ class ElasticLogsIndexAction extends IndexAction
 
         if ($request->query('changed_fields')) {
             $query->where(function ($builder) use ($request) {
-                $fields = explode(',', $request->query('changed_fields'));
-                $fields = array_map(function ($f) { return 'changed.' . $f; }, array_map('trim', $fields));
+                $fields = explode(',', (string) $request->query('changed_fields'));
+                $fields = array_map(fn($f) => 'changed.' . $f, array_map('trim', $fields));
                 $fields = array_map([$builder, 'exists'], $fields);
                 return $builder->and_($fields);
             });
         }
 
         if ($request->query('query')) {
-            $query->where(function ($builder) use ($request) {
-                return $builder->query(new \Elastica\Query\QueryString($request->query('query')));
-            });
+            $query->where(fn($builder) => $builder->query(new \Elastica\Query\QueryString($request->query('query'))));
         }
 
         try {
             $this->addTimeConstraints($request, $query);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
         }
 
         $subject = $this->_subject(['success' => true, 'query' => $query]);
@@ -93,6 +91,7 @@ class ElasticLogsIndexAction extends IndexAction
      */
     protected function addTimeConstraints($request, $query)
     {
+        $until = null;
         if ($request->query('from')) {
             $from = new \DateTime($request->query('from'));
             $until = new \DateTime();
@@ -103,9 +102,7 @@ class ElasticLogsIndexAction extends IndexAction
         }
 
         if (!empty($from)) {
-            $query->where(function ($builder) use ($from, $until) {
-                return $builder->between('@timestamp', $from->format('Y-m-d H:i:s'), $until->format('Y-m-d H:i:s'));
-            });
+            $query->where(fn($builder) => $builder->between('@timestamp', $from->format('Y-m-d H:i:s'), $until->format('Y-m-d H:i:s')));
             return;
         }
 

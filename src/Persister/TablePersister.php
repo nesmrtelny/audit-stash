@@ -22,28 +22,28 @@ class TablePersister implements PersisterInterface
      *
      * @var string
      */
-    const STRATEGY_AUTOMATIC = 'automatic';
+    final const STRATEGY_AUTOMATIC = 'automatic';
 
     /**
      * Strategy that extracts data as separate fields/properties.
      *
      * @var string
      */
-    const STRATEGY_PROPERTIES = 'properties';
+    final const STRATEGY_PROPERTIES = 'properties';
 
     /**
      * Strategy that extracts data as is.
      *
      * @var string
      */
-    const STRATEGY_RAW = 'raw';
+    final const STRATEGY_RAW = 'raw';
 
     /**
      * Strategy that extracts data serialized in JSON format.
      *
      * @var string
      */
-    const STRATEGY_SERIALIZED = 'serialized';
+    final const STRATEGY_SERIALIZED = 'serialized';
 
     /**
      * The default configuration.
@@ -146,7 +146,7 @@ class TablePersister implements PersisterInterface
      * @param string|\Cake\ORM\Table $table Either a string denoting a table alias, or a table object.
      * @return $this
      */
-    public function setTable($table)
+    public function setTable(string|\Cake\ORM\Table $table)
     {
         if (is_string($table)) {
             $table = $this->getTableLocator()->get($table);

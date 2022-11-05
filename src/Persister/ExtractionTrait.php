@@ -100,7 +100,7 @@ trait ExtractionTrait
      * @param bool $serialize Whether to serialize fields that are expected to hold array data.
      * @return array
      */
-    protected function extractMetaFields(EventInterface $event, $fields, $unsetExtracted = true, $serialize = true)
+    protected function extractMetaFields(EventInterface $event, array|bool $fields, $unsetExtracted = true, $serialize = true)
     {
         $extracted = [
             'meta' => $event->getMetaInfo()
@@ -165,12 +165,12 @@ trait ExtractionTrait
      * @param mixed $value The value to convert to JSON.
      * @return string|null
      */
-    protected function serialize($value)
+    protected function serialize(mixed $value)
     {
         if ($value === null) {
             return $value;
         }
 
-        return json_encode($value);
+        return json_encode($value, JSON_THROW_ON_ERROR);
     }
 }

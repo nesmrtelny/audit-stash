@@ -23,7 +23,7 @@ class AuditDeleteEvent implements EventInterface
      * @param string $source The name of the source (table) where the record was deleted
      * @param string $parentSource The name of the source (table) that triggered this change
      */
-    public function __construct($transactionId, $id, $source, $parentSource = null)
+    public function __construct($transactionId, mixed $id, $source, $parentSource = null)
     {
         $this->transactionId = $transactionId;
         $this->id = $id;

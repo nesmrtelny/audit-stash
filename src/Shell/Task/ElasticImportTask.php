@@ -61,17 +61,17 @@ class ElasticImportTask extends Shell
         $meta = [];
 
         $featureList = function ($element) {
-            list($k, $v) = explode(':', $element);
+            [$k, $v] = explode(':', $element);
             yield $k => $v;
         };
 
         if (!empty($this->params['type-map'])) {
-            $map = explode(',', $this->params['type-map']);
+            $map = explode(',', (string) $this->params['type-map']);
             $map = collection($map)->unfold($featureList)->toArray();
         }
 
         if (!empty($this->params['extra-meta'])) {
-            $meta = explode(',', $this->params['extra-meta']);
+            $meta = explode(',', (string) $this->params['extra-meta']);
             $meta = collection($meta)->unfold($featureList)->toArray();
         }
 
@@ -85,22 +85,18 @@ class ElasticImportTask extends Shell
         $queue->setIteratorMode(\SplDoublyLinkedList::IT_MODE_DELETE);
         $index = ConnectionManager::get('auditlog_elastic')->getConfig('index');
 
-        $eventsFormatter = function ($audit) use ($index, $meta) {
-            return $this->eventFormatter($audit, $index, $meta);
-        };
-        $changesExtractor = [$this, 'changesExtractor'];
+        $eventsFormatter = fn($audit) => $this->eventFormatter($audit, $index, $meta);
+        $changesExtractor = $this->changesExtractor(...);
 
         $query = $table->find()
-            ->where(function ($exp) use ($from, $until) {
-                return $exp->between('Audits.created', $from, $until, 'datetime');
-            })
+            ->where(fn($exp) => $exp->between('Audits.created', $from, $until, 'datetime'))
             ->where(function ($exp) {
                 if (!empty($this->params['exclude-models'])) {
-                    $exp->notIn('Audits.model', explode(',', $this->params['exclude-models']));
+                    $exp->notIn('Audits.model', explode(',', (string) $this->params['exclude-models']));
                 }
 
                 if (!empty($this->params['models'])) {
-                    $exp->in('Audits.model', explode(',', $this->params['models']));
+                    $exp->in('Audits.model', explode(',', (string) $this->params['models']));
                 }
                 return $exp;
             })
@@ -125,7 +121,7 @@ class ElasticImportTask extends Shell
                 }
             });
 
-        $query->each([$this, 'persistBulk']);
+        $query->each($this->persistBulk(...));
 
         // There are probably some un-yielded results, let's flush them
         $rest = collection(count($buffer) ? [collection($buffer)->toList()] : [])
@@ -145,7 +141,7 @@ class ElasticImportTask extends Shell
      * @param string $key The field name where the data was stored
      * @return mixed
      */
-    public function habtmFormatter($value, $key)
+    public function habtmFormatter(mixed $value, $key)
     {
         if (empty($key) || !ctype_upper($key[0])) {
             return $value;
@@ -160,7 +156,7 @@ class ElasticImportTask extends Shell
             return $value;
         }
 
-        $list = explode(',', $value);
+        $list = explode(',', (string) $value);
 
         if (empty($list)) {
             return [];
@@ -175,9 +171,9 @@ class ElasticImportTask extends Shell
      * @param mixed $value The value to convert
      * @return mixed
      */
-    public function allBallsRemover($value)
+    public function allBallsRemover(mixed $value)
     {
-        if (is_string($value) && strpos($value, '0000-00-00') === 0) {
+        if (is_string($value) && str_starts_with($value, '0000-00-00')) {
             return;
         }
         return $value;
@@ -202,14 +198,14 @@ class ElasticImportTask extends Shell
         unset($audit['_matchingData']);
 
         $audit['original'] = collection($changes)
-            ->map(function ($c) { return $c['old_value']; })
-            ->map([$this, 'habtmFormatter'])
-            ->map([$this, 'allBallsRemover'])
+            ->map(fn($c) => $c['old_value'])
+            ->map($this->habtmFormatter(...))
+            ->map($this->allBallsRemover(...))
             ->toArray();
         $audit['changed'] = collection($changes)
-            ->map(function ($c) { return $c['new_value']; })
-            ->map([$this, 'habtmFormatter'])
-            ->map([$this, 'allBallsRemover'])
+            ->map(fn($c) => $c['new_value'])
+            ->map($this->habtmFormatter(...))
+            ->map($this->allBallsRemover(...))
             ->toArray();
 
         return $audit;
@@ -225,10 +221,11 @@ class ElasticImportTask extends Shell
      */
     public function eventFormatter($audit, $index, $meta = [])
     {
+        $map = [];
         $data = [
             '@timestamp' => $audit['created'],
             'transaction' => $audit['id'],
-            'type' => $audit['event'] === 'EDIT' ? 'update' : strtolower($audit['event']),
+            'type' => $audit['event'] === 'EDIT' ? 'update' : strtolower((string) $audit['event']),
             'primary_key' => $audit['entity_id'],
             'original' => $audit['original'],
             'changed' => $audit['changed'],
@@ -240,7 +237,7 @@ class ElasticImportTask extends Shell
         ];
 
         $index = sprintf($index, \DateTime::createFromFormat('Y-m-d H:i:s', $audit['created'])->format('-Y.m.d'));
-        $type = isset($map[$audit['model']]) ? $map[$audit['model']] : Inflector::tableize($audit['model']);
+        $type = $map[$audit['model']] ?? Inflector::tableize($audit['model']);
         return new Document($audit['id'], $data, $type, $index);
     }
 

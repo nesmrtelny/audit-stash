@@ -44,7 +44,6 @@ class AuditLogBehavior extends Behavior
     /**
      * Returns the list of implemented events.
      *
-     * @return array
      */
     public function implementedEvents(): array
     {
@@ -147,9 +146,7 @@ class AuditLogBehavior extends Behavior
         }
 
         $events = collection($options['_auditQueue'])
-            ->map(function ($entity, $pos, $it) {
-                return $it->getInfo();
-            })
+            ->map(fn($entity, $pos, $it) => $it->getInfo())
             ->toList();
 
         if (empty($events)) {
